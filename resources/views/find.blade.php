@@ -20,11 +20,10 @@
         </div>
         <div class="row">
             @php($i=1)
-            @foreach($userDetails as $res)
             <div class="card" style="width: 18rem;">
                 <img src="#" class="card-img-top" alt="...">
                 <div class="card-body">
-                    <h5 class="card-title">{{$res->name}}</h5>
+                    <h5 class="card-title">{{$userDetails->name}}</h5>
                 </div>
             </div>
         </div>
@@ -35,14 +34,13 @@
                 </div>
                 <div class="card-body">
                         <table class="table" >
-                            @foreach ($res as $name)
+                            @foreach ($userDetails->repos as $name)
                             <tr>
                                 <td>{{$i++}}</td>
                                 <td>{{$name->repo_name}}</td>
                             </tr>
                             @endforeach
                         </table>
-                    @endforeach
                 </div>
             </div>
         </div>
