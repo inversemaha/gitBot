@@ -36,8 +36,8 @@ class RepositoryController extends Controller
             })->get();*/
 
 
-           $userDetails = User::with('repos')->where('login', 'like', '%' . $username . '%')->get();
-          return $userDetails;
+           $userDetails = User::with('repos')->where('login', 'like', '%' . $username . '%')->first();
+         // return $userDetails;
 
             return view('find')->with('userDetails', $userDetails);
 
