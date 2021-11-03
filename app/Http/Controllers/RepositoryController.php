@@ -29,52 +29,71 @@ class RepositoryController extends Controller
     public function searchUser(Request $request)
     {
         $username = $request['name'];
-        if (User::where('login', '=', $username)->exists()) {
-            // User exits
-            /*$userDetails = Repository::whereHas('getUser', function($q) use($username) {
-                $q->where('name', 'like', '%' . $username . '%');
-            })->get();*/
 
-
-           $userDetails = User::with('repos')->where('login', 'like', '%' . $username . '%')->first();
-         // return $userDetails;
-
-            return view('find')->with('userDetails', $userDetails);
-
-
-        }else {
+        $exists = User::where('login', $username)->first();
+        if(is_null($exists)){
             // User does not exist
-            $client = new \GuzzleHttp\Client(['headers' => ['Accept' => 'application/json']]);
-            $res = $client->request('GET', "https://api.github.com/users/$username");
-            $data = json_decode($res->getBody()->getContents(), true);
-            $userLogin = $data['login'];
-            $avatarUrl = $data['avatar_url'];
-            $userFname = $data['name'];
-            $result = array(
-                'login' => $userLogin,
-                'image' => $avatarUrl,
-                'name' => $userFname,
-            );
-            // dd($result);
+            try {
+                $client = new \GuzzleHttp\Client(['headers' => ['Accept' => 'application/json']]);
+                $res = $client->request('GET', "https://api.github.com/users/$username");
+                $data = json_decode($res->getBody()->getContents(), true);
+                $userLogin = $data['login'];
+                $avatarUrl = $data['avatar_url'];
+                if($data['name'] == null){
+                    $userFname = $userLogin;
+                }else{
+                    $userFname = $data['name'];
+                }
+                $result = array(
+                    'login' => $userLogin,
+                    'image' => $avatarUrl,
+                    'name' => $userFname,
+                );
+                // dd($result);
 
-           $userId = User::insertGetId($result);
+                $userId = User::insertGetId($result);
 
-            $resRepos = $client->request('GET', "https://api.github.com/users/$username/repos");
-            $reposData = json_decode($resRepos->getBody()->getContents(), true);
-            $reposArray = array();
-            foreach($reposData as $key =>$items){
-                array_push($reposArray,array(
-                    'user_id'=>$userId,
-                    'repo_name'=>$items['full_name'],
-                    'repo_link'=>$items['html_url'],
-                ));
+                $resRepos = $client->request('GET', "https://api.github.com/users/$username/repos");
+                $reposData = json_decode($resRepos->getBody()->getContents(), true);
+                $reposArray = array();
+                foreach($reposData as $key =>$items){
+                    array_push($reposArray,array(
+                        'user_id'=>$userId,
+                        'repo_name'=>$items['full_name'],
+                        'repo_link'=>$items['html_url'],
+                    ));
+                }
+
+                //dd($reposArray);
+                Repository::insert($reposArray);
+                return redirect('/');
+            }catch (\Exception $exception){
+                return [
+                    'code' => 404,
+                    'message' => $exception->getMessage(),
+                ];
+
             }
 
-            //dd($reposArray);
-            Repository::insert($reposArray);
-            return redirect('/');
+        }else{
+            try {
+
+                $userDetails = User::with('repos')->where('login', 'like', '%' . $username . '%')->first();
+                // return $userDetails;
+
+                return view('find')->with('userDetails', $userDetails);
+
+            } catch (\Exception $exception){
+                return [
+                    'code' => 404,
+                    'message' => $exception->getMessage(),
+                ];
+
+            }
+
 
         }
+
     }
 
 
