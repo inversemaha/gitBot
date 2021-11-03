@@ -72,6 +72,7 @@ class RepositoryController extends Controller
 
             //dd($reposArray);
             Repository::insert($reposArray);
+            return redirect('/');
 
         }
     }
